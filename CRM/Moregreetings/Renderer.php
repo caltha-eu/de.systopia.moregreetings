@@ -43,9 +43,14 @@ class CRM_Moregreetings_Renderer {
     if ($contact == NULL) {
       // remark: if you change these parameters, see if you also want to adjust
       //  CRM_Moregreetings_Job::run and CRM_Moregreetings_Renderer::updateMoreGreetingsForContacts
+      $field_keys = [];
+      $active_fields = CRM_Moregreetings_Config::getActiveFields();
+      foreach ($active_fields as $field) {
+        $field_keys[] = "custom_{$field['id']}";
+      }
       $contact = civicrm_api3('Contact', 'getsingle', array(
         'id'     => $contact_id,
-        'return' => self::getUsedContactFields($templates),
+        'return' => self::getUsedContactFields($templates) . ',' . implode(',', $field_keys),
       ));
     }
 
@@ -55,11 +60,8 @@ class CRM_Moregreetings_Renderer {
     CRM_Utils_Smarty::registerCustomFunctions($smarty);
     $smarty->assign('contact', $contact);
 
-    // load the current greetings
-    $current_greetings = CRM_Moregreetings_Config::getCurrentData($contact_id);
-
     // get the fields to render
-    $greetings_to_render = self::getGreetingsToRender($contact, $templates, $current_greetings);
+    $greetings_to_render = self::getGreetingsToRender($contact, $templates);
 
     // render the greetings
     $greetings_update = array();
@@ -67,7 +69,7 @@ class CRM_Moregreetings_Renderer {
       $new_value = $smarty->fetch("string:$template");
       $new_value = trim($new_value);
       // check if the value is really different (avoid unecessary updates)
-      if ($new_value != $current_greetings[$greeting_key]) {
+      if ($new_value != $contact[$greeting_key]) {
         $greetings_update[$greeting_key] = $new_value;
       }
     }
@@ -80,6 +82,8 @@ class CRM_Moregreetings_Renderer {
     } else {
       // error_log("Nothing to do");
     }
+
+    return NULL;
   }
 
 
@@ -120,8 +124,13 @@ class CRM_Moregreetings_Renderer {
    * Get an array [custom_key] => [template]
    * of the fields to be rendered for this contact,
    * i.e. all the fields are there and not protected
+   *
+   * @param $contact
+   * @param $templates
+   *
+   * @return array
    */
-  protected static function getGreetingsToRender($contact, $templates, $current_data) {
+  protected static function getGreetingsToRender($contact, $templates) {
     // first: load
     $active_fields = CRM_Moregreetings_Config::getActiveFields();
 
@@ -130,7 +139,7 @@ class CRM_Moregreetings_Renderer {
     foreach ($active_fields as $field_id => $field) {
       if (preg_match("#^greeting_field_(?P<field_number>\\d+)_protected$#", $field['name'], $matches)) {
         $field_number = $matches['field_number'];
-        if (!empty($current_data["custom_{$field['id']}"])) {
+        if (!empty($contact["custom_{$field['id']}"])) {
           $protected_fields[] = $field_number;
         }
       }
@@ -160,7 +169,6 @@ class CRM_Moregreetings_Renderer {
     $fields_used = array();
 
     // now compile the list of unprotected active greeting fields
-    $fields_to_render = array();
     foreach ($active_fields as $field_id => $field) {
       if (preg_match("#^greeting_field_(?P<field_number>\d+)$#", $field['name'], $matches)) {
         $field_number = $matches['field_number'];
