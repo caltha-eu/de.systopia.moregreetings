@@ -26,7 +26,7 @@ function civicrm_api3_job_update_moregreetings($params) {
   }
 
   // ok, let's go
-  CRM_Core_BAO_Setting::setItem('busy', 'moregreetings', 'moregreetings_job_status');
+  Civi::settings()->set('moregreetings_job_status', 'busy');
   $start_time = microtime(TRUE);
 
   // run the renderer on blocks of contacts until the time runs out
@@ -46,7 +46,7 @@ function civicrm_api3_job_update_moregreetings($params) {
     return civicrm_api3_create_success(ts("Done.", array('domain' => 'de.systopia.moregreetings')));
   } else {
     // store last processed ID
-    CRM_Core_BAO_Setting::setItem($last_id, 'moregreetings', 'moregreetings_job_status');
+    Civi::settings()->set('moregreetings_job_status', $last_id);
     return civicrm_api3_create_success(ts("Interrupted processing, more contacts remain.", array('domain' => 'de.systopia.moregreetings')));
   }
 }

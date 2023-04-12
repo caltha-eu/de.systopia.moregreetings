@@ -121,7 +121,7 @@ class CRM_Moregreetings_Form_Settings extends CRM_Core_Form {
         $greetings_changed = TRUE;
       }
     }
-    CRM_Core_BAO_Setting::setItem($values_array, 'moregreetings', 'moregreetings_templates');
+    Civi::settings()->set('moregreetings_templates', $values_array);
 
     // then: adjust the greeting count
     if ($values['greeting_count'] != self::getNumberOfGreetings()) {
