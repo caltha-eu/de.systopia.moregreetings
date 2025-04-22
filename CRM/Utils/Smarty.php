@@ -25,27 +25,31 @@ class CRM_Utils_Smarty {
    * @param Smarty $smarty
    */
   public static function registerCustomFunctions($smarty) {
-    try{
-      $smarty->register_modifier('mg_startswith',            ['CRM_Utils_Smarty', 'startswith']);
-    } catch(\Exception $e){}
-    try{
-      $smarty->register_modifier('mg_endswith',              ['CRM_Utils_Smarty', 'endswith']);
-    } catch(\Exception $e){}
-    try{
-      $smarty->register_modifier('mg_contains',              ['CRM_Utils_Smarty', 'contains']);
-    } catch(\Exception $e){}
-    try{
-      $smarty->register_modifier('tokens_have_min_length',   ['CRM_Utils_Smarty', 'tokens_have_min_length']);
-    } catch(\Exception $e){}
-    try{
-      $smarty->register_modifier('token_extract',            ['CRM_Utils_Smarty', 'token_extract']);
-    } catch(\Exception $e){}
-    try{
-      $smarty->register_modifier('lcfirst',    'lcfirst');
-    } catch(\Exception $e){}
-    try{
-      $smarty->register_modifier('ucfirst',    'ucfirst');
-    } catch(\Exception $e){}
+    static $registered = FALSE;
+    if($smarty && !$registered) {
+      if(!$smarty->getRegisteredPlugin('modifier', 'mg_startswith')) {
+        $smarty->registerPlugin("modifier", 'mg_startswith', ['CRM_Utils_Smarty', 'startswith']);
+      }
+      if(!$smarty->getRegisteredPlugin('modifier', 'mg_endswith')) {
+        $smarty->registerPlugin("modifier", 'mg_endswith', ['CRM_Utils_Smarty', 'endswith']);
+      }
+      if(!$smarty->getRegisteredPlugin('modifier', 'mg_contains')) {
+        $smarty->registerPlugin("modifier", 'mg_contains', ['CRM_Utils_Smarty', 'contains']);
+      }
+      if(!$smarty->getRegisteredPlugin('modifier', 'tokens_have_min_length')) {
+        $smarty->registerPlugin("modifier", 'tokens_have_min_length', ['CRM_Utils_Smarty', 'tokens_have_min_length']);
+      }
+      if(!$smarty->getRegisteredPlugin('modifier', 'token_extract')) {
+        $smarty->registerPlugin("modifier", 'token_extract', ['CRM_Utils_Smarty', 'token_extract']);
+      }
+      if(!$smarty->getRegisteredPlugin('modifier', 'lcfirst')) {
+        $smarty->registerPlugin("modifier", 'lcfirst', 'lcfirst');
+      }
+      if(!$smarty->getRegisteredPlugin('modifier', 'ucfirst')) {
+        $smarty->registerPlugin("modifier", 'ucfirst', 'ucfirst');
+      }
+      $registered = TRUE;
+    }
   }
 
   /**
