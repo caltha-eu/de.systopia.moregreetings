@@ -39,7 +39,7 @@ class CRM_Moregreetings_Config {
    * Get the maximum number of greeting fields
    */
   public static function getMaxActiveFieldCount() {
-    return 9;
+    return 10;
   }
 
   /**
