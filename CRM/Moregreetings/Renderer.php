@@ -80,8 +80,6 @@ class CRM_Moregreetings_Renderer {
     } else {
       // error_log("Nothing to do");
     }
-
-    return NULL;
   }
 
 
