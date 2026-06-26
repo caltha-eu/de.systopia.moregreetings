@@ -67,7 +67,7 @@ class CRM_Moregreetings_Renderer {
       $new_value = \CRM_Utils_String::parseOneOffStringThroughSmarty($template, $templateVars);
       $new_value = trim($new_value);
       // check if the value is really different (avoid unecessary updates)
-      if ($new_value != $contact[$greeting_key]) {
+      if (isset($contact[$greeting_key]) && $new_value !== $contact[$greeting_key]) {
         $greetings_update[$greeting_key] = $new_value;
       }
     }
