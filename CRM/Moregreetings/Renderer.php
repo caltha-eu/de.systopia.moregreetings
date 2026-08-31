@@ -60,7 +60,6 @@ class CRM_Moregreetings_Renderer {
     $templateVars = [
       'contact' => $contact,
     ];
-
     // load the current greetings
     $current_greetings = CRM_Moregreetings_Config::getCurrentData($contact_id);
 
@@ -73,7 +72,7 @@ class CRM_Moregreetings_Renderer {
       $new_value = \CRM_Utils_String::parseOneOffStringThroughSmarty($template, $templateVars);
       $new_value = trim($new_value);
       // check if the value is really different (avoid unecessary updates)
-      if ($new_value != $current_greetings[$greeting_key]) {
+      if (isset($current_greetings[$greeting_key]) && $new_value !== $current_greetings[$greeting_key]) {
         $greetings_update[$greeting_key] = $new_value;
       }
     }
