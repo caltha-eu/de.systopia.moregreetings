@@ -58,17 +58,51 @@ class CRM_Moregreetings_Job {
     $templates = Civi::settings()->get('moregreetings_templates');
     $used_fields = CRM_Moregreetings_Renderer::getUsedContactFields($templates);
 
+    $active_fields = CRM_Moregreetings_Config::getActiveFields();
+    foreach ($active_fields as $key => $field) {
+      $field_keys[] = "custom_{$field['id']}";
+    }
+
+    $api_select_fields = ['id'];
+    $alias_map = [];
+
+    foreach ($used_fields as $field_str) {
+      if (preg_match('/custom_(\d+)/', $field_str, $matches)) {
+        $field_id = (int) $matches[1];
+
+        $field_info = \Civi\Api4\CustomField::get(FALSE)
+          ->addSelect('name', 'custom_group_id.name')
+          ->addWhere('id', '=', $field_id)
+          ->execute()
+          ->first();
+
+        if ($field_info) {
+          $real_field_name = $field_info['custom_group_id.name'] . '.' . $field_info['name'];
+          $api_select_fields[] = $real_field_name;
+          $alias_map[$real_field_name] = "custom_{$field_id}";
+        }
+      }
+      else {
+        $api_select_fields[] = $field_str;
+      }
+    }
+    $api_select_fields = array_unique($api_select_fields);
+
     // load contacts
     // remark: if you change these parameters, see if you also want to adjust
     //  CRM_Moregreetings_Renderer::updateMoreGreetings and CRM_Moregreetings_Renderer::updateMoreGreetingsForContacts
     $contacts = Contact::get(FALSE)
-      ->setSelect($used_fields)
+      ->setSelect($api_select_fields)
       ->addSelect('id')
       ->addWhere('id', 'IN', $contact_ids)
       ->execute();
-
-    // apply
     foreach ($contacts as $contact) {
+      foreach ($alias_map as $real_name => $custom_key) {
+        if (array_key_exists($real_name, $contact)) {
+          $contact[$custom_key] = $contact[$real_name];
+        }
+      }
+
       CRM_Moregreetings_Renderer::updateMoreGreetings($contact['id'], $contact);
     }
 
