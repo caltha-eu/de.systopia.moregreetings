@@ -65,8 +65,9 @@ class CRM_Moregreetings_Job {
 
     $api_select_fields = ['id'];
     $alias_map = [];
+    $all_fields = array_merge($field_keys, $used_fields);
 
-    foreach ($used_fields as $field_str) {
+    foreach ($all_fields as $field_str) {
       if (preg_match('/custom_(\d+)/', $field_str, $matches)) {
         $field_id = (int) $matches[1];
 
