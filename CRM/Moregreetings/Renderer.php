@@ -49,13 +49,59 @@ class CRM_Moregreetings_Renderer {
     if ($contact == NULL) {
       // remark: if you change these parameters, see if you also want to adjust
       //  CRM_Moregreetings_Job::run and CRM_Moregreetings_Renderer::updateMoreGreetingsForContacts
-      $contact = Contact::get(FALSE)
-        ->setSelect(self::getUsedContactFields($templates))
+      $used_fields = CRM_Moregreetings_Renderer::getUsedContactFields($templates);
+
+      $active_fields = CRM_Moregreetings_Config::getActiveFields();
+      foreach ($active_fields as $key => $field) {
+        $field_keys[] = "custom_{$field['id']}";
+      }
+
+      $api_select_fields = ['id'];
+      $alias_map = [];
+
+      $all_fields = array_merge($field_keys, $used_fields);
+      foreach ($all_fields   as $field_str) {
+        if (preg_match('/custom_(\d+)/', $field_str, $matches)) {
+          $field_id = (int) $matches[1];
+
+          $field_info = \Civi\Api4\CustomField::get(FALSE)
+            ->addSelect('name', 'custom_group_id.name')
+            ->addWhere('id', '=', $field_id)
+            ->execute()
+            ->first();
+
+          if ($field_info) {
+            $real_field_name = $field_info['custom_group_id.name'] . '.' . $field_info['name'];
+            $api_select_fields[] = $real_field_name;
+            $alias_map[$real_field_name] = "custom_{$field_id}";
+          }
+        }
+        else {
+          $api_select_fields[] = $field_str;
+          $alias_map[$field_str] = $field_str;
+        }
+      }
+      $api_select_fields = array_unique($api_select_fields);
+      // load contacts
+      // remark: if you change these parameters, see if you also want to adjust
+      //  CRM_Moregreetings_Renderer::updateMoreGreetings and CRM_Moregreetings_Renderer::updateMoreGreetingsForContacts
+      $contact_item = Contact::get(FALSE)
+        ->setSelect($api_select_fields)
+        ->addSelect('id')
         ->addWhere('id', '=', $contact_id)
         ->execute()
         ->single();
-    }
 
+      $contact['id'] = $contact_id;
+      foreach ($contact_item as $item) {
+        foreach ($alias_map as $real_name => $custom_key) {
+          if (array_key_exists($real_name, $item)) {
+            $contact[$custom_key] = $item[$real_name];
+          }
+        }
+      }
+
+    }
     // TODO: assign more stuff?
     $templateVars = [
       'contact' => $contact,
@@ -72,11 +118,10 @@ class CRM_Moregreetings_Renderer {
       $new_value = \CRM_Utils_String::parseOneOffStringThroughSmarty($template, $templateVars);
       $new_value = trim($new_value);
       // check if the value is really different (avoid unecessary updates)
-      if (isset($contact[$greeting_key]) && $new_value !== $current_greetings[$greeting_key]) {
+      if ($new_value !== $contact[$greeting_key]) {
         $greetings_update[$greeting_key] = $new_value;
       }
     }
-
     // finally: run the update if there are changes
     if (!empty($greetings_update)) {
       $greetings_update['entity_id'] = $contact_id;
