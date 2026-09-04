@@ -93,11 +93,10 @@ class CRM_Moregreetings_Renderer {
         ->single();
 
       $contact['id'] = $contact_id;
-      foreach ($contact_item as $item) {
-        foreach ($alias_map as $real_name => $custom_key) {
-          if (array_key_exists($real_name, $item)) {
-            $contact[$custom_key] = $item[$real_name];
-          }
+
+      foreach ($alias_map as $real_name => $custom_key) {
+        if (array_key_exists($real_name, $contact_item)) {
+          $contact[$custom_key] = $contact_item[$real_name];
         }
       }
 
