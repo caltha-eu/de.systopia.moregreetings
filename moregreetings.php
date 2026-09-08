@@ -83,7 +83,10 @@ function moregreetings_civicrm_buildForm(string $formName, CRM_Core_Form $form) 
 function moregreetings_civicrm_post(string $op, string $objectName, int $objectId, mixed &$objectRef) {
   if ($op === 'edit' || $op === 'create') {
     if ($objectName === 'Individual' || $objectName === 'Organization' || $objectName === 'Household') {
-      CRM_Moregreetings_Renderer::updateMoreGreetings($objectId);
+      CRM_Core_DAO::executeQuery(
+        "INSERT INTO civicrm_declinator_queue (contact_id) VALUES (%1)",
+        [1 => [$objectId, 'Integer']]
+      );
     }
   }
 }
