@@ -84,7 +84,7 @@ function moregreetings_civicrm_post(string $op, string $objectName, int $objectI
   if ($op === 'edit' || $op === 'create') {
     if ($objectName === 'Individual' || $objectName === 'Organization' || $objectName === 'Household') {
       CRM_Core_DAO::executeQuery(
-        "INSERT IGNORE INTO civicrm_declinator_queue (contact_id) VALUES (%1)",
+        "INSERT INTO civicrm_declinator_queue (contact_id) VALUES (%1) ON DUPLICATE KEY UPDATE contact_id = %1;",
         [1 => [$objectId, 'Integer']]
       );
     }
